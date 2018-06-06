@@ -1,0 +1,163 @@
+<html>
+<head>
+	<script src="jquery-3.2.1.min.js"></script>
+	<script>
+		var letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+		var width = 900;
+		var height = 700;
+		var step = 20;
+		var timeout = 3000;
+		var intervalTime = null;
+		var totalLetter = 0;
+		var gate = 0;
+		var gateLimitation = 50;
+		
+		$(document).ready(function(){
+			randomBackground();
+			
+			$('#start').click(function(){
+				restartGame();
+			})
+			
+			$('#pause').click(pauseShowLetter);
+			
+			function pauseShowLetter(){
+				clearInterval(intervalTime);
+				
+				$('#start').show();
+				$('#pause').hide();
+			}
+			
+			function stopShowLetter(){
+				clearInterval(intervalTime);
+			}
+						
+			function restartGame(){
+				randomBackground();
+				$('#start').hide();
+				$('#pause').show();
+				gate++;
+				$('.gate').html(gate);
+				startGame();
+				
+				intervalTime = setInterval(startGame, timeout);
+			}
+						
+			function startGame(){
+				showNextLetter();
+				moveLetters();
+			}
+			
+			function moveLetters(){
+				$('.letter').each(function(){
+					var topPosition = parseInt($(this).css('top'));
+					if(topPosition>height){
+						$(this).remove();
+						$('.lost').html(parseInt($('.lost').html()) + 1);
+					}else{
+						$(this).css('top', topPosition+step + 'px');
+					}
+				});
+			}
+			
+			function showNextLetter(){
+				var random = Math.floor(Math.random()*26);
+				$('.left').append("<div class='letter' style='left:" + (Math.random()*width) + "px'>"+letters[random]+"</div>");
+				totalLetter ++;
+				
+				if(totalLetter%gateLimitation===0){
+					stopShowLetter();
+				}
+			}
+			
+			$('body').keyup(function(e){
+				var keycode = e.keyCode;
+				
+				$('.letter').each(function(){
+					var letterCode = $(this).html().charCodeAt();
+					if(letterCode === keycode){
+						playLetter($(this).html()); 
+						$(this).animate({top:'400px'},'slow', function(){
+							$(this).remove();
+							$('.fire').html(parseInt($('.fire').html()) + 1);							
+							
+							if($('.letter').length === 0 && (totalLetter%gateLimitation ===0)){
+								setTimeout(playPass, 1000);			
+								$('#start').show();
+								$('#pause').hide();
+							}
+						});
+						return;
+					}
+				})
+			})
+			function playPass(){
+				playLetter('pass');
+			}
+			
+			function playLetter(letter){
+				var audio = document.getElementById("letterSound");
+				audio.src = 'sound/'+letter+'.mp3';
+				audio.play();
+			}		
+			
+			function randomBackground(){
+				var imgIndex = Math.floor(Math.random()*9) + 1;
+				$('.left').css('background-image','url(img/'+imgIndex+'.jpg)');
+			}
+		});
+	</script>
+	<style type="text/css">
+		.letter{
+			position: absolute;
+			top: 0;
+			width: 35px;
+			height: 35px;
+			border-radius: 35px;
+			background-color: dodgerblue;
+			color: yellow;
+			font-weight: bolder;
+			font-size: 25px;
+			text-align: center;
+			border: 1px solid deepskyblue;			
+		}
+		.btn{
+			font-size: 30px;
+			font-weight: bolder;
+			background-color: gray;
+			color: white;
+			border-radius: 7px;
+			padding: 10px;
+		}
+		
+		.right{
+			float: right;
+		}
+		.left{
+			float: left;
+			width:979px;
+			height: 724px;
+		}
+		
+		.lost, .fire, .gate{
+			color: red;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="left">
+		
+	</div>
+	<div class="right">
+		<div class='btn'id='start'>Start</div><br>
+		<div class='btn' id='pause' style='display: none;'>Pause</div><br>
+		<div class='result'>
+			Lost: <span class='lost'>0</span><br>
+			Fire: <span class='fire'>0</span><br>
+			Gate: <span class="gate">0</span>
+		</div>
+	</div>
+	<audio id='letterSound'></audio>
+	</body>
+</html>
